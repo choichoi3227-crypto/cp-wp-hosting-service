@@ -1,8 +1,7 @@
-# wrangler.toml
-name = 'cp-wp-hosting-service'
-compatibility_date = "2026-05-14"
+name = "cloudpress"
+compatibility_date = "2024-09-25"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "."
+pages_build_output_dir = "./dist"
 
 [[d1_databases]]
 binding = "DB"
@@ -12,14 +11,6 @@ database_id = "e6bf3b1a-c143-4daa-8e72-557d42f1ab60"
 [[kv_namespaces]]
 binding = "KV"
 id = "13f767b4020e438db9a7ee5ea320801c"
-
-[[durable_objects.bindings]]
-name = "MyDurableObject"
-class_name = "MyDurableObject"
-
-[[migrations]]
-tag = "v1"
-new_classes = ["MyDurableObject"]
 
 [vars]
 ENVIRONMENT = "production"
