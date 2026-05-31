@@ -71,7 +71,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
       message: '회원가입이 완료되었습니다. 클라우드프레스에 오신 것을 환영합니다! 🎉',
     }), { status: 201, headers });
   } catch (err) {
-    console.error('Register error:', err);
-    return Response.json({ success: false, error: '회원가입 중 오류가 발생했습니다.' }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Register error:', message);
+    return Response.json({
+      success: false,
+      error: '회원가입 중 오류가 발생했습니다.',
+      debug: message, // 문제 파악 후 반드시 제거할 것
+    }, { status: 500 });
   }
 };
