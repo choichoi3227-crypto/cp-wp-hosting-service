@@ -17,14 +17,6 @@ id = "13f767b4020e438db9a7ee5ea320801c"
 name = "MyDurableObject"
 class_name = "MyDurableObject"
 
-[[durable_objects.bindings]]
-name = "MyDurableObject"
-class_name = "MyDurableObject"
-
-[[durable_objects.bindings]]
-name = "MyDurableObject"
-class_name = "MyDurableObject"
-
 [[migrations]]
 tag = "v1"
 new_classes = ["sitemanager_MyDurableObject", "webhook-handler_MyDurableObject", "cachemanager_MyDurableObject"]
