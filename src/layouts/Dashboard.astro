@@ -1,0 +1,172 @@
+---
+// src/layouts/Dashboard.astro
+import Base from './Base.astro';
+export interface Props {
+  title?: string;
+  activeNav?: string;
+}
+const { title, activeNav } = Astro.props;
+
+const nav = [
+  { id: 'dashboard', href: '/dashboard', label: '대시보드', icon: '⊞' },
+  { id: 'sites', href: '/dashboard/sites', label: '내 사이트', icon: '🌐' },
+  { id: 'create', href: '/dashboard/create', label: '사이트 만들기', icon: '＋' },
+  { id: 'domains', href: '/dashboard/domains', label: '도메인 관리', icon: '🔗' },
+  { id: 'profile', href: '/dashboard/profile', label: '내 정보 관리', icon: '👤' },
+  { id: 'billing', href: '/dashboard/billing', label: '결제 / 플랜', icon: '💳' },
+];
+---
+<Base title={title}>
+  <div class="flex h-full min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-200">
+      <!-- Logo -->
+      <div class="flex items-center gap-2 px-5 py-5 border-b border-slate-200 dark:border-slate-700">
+        <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm">C</div>
+        <span class="font-bold text-lg text-slate-900 dark:text-white">클라우드프레스</span>
+      </div>
+      <!-- Nav -->
+      <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        {nav.map(item => (
+          <a
+            href={item.href}
+            class={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              activeNav === item.id
+                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            <span class="text-base">{item.icon}</span>
+            <span>{item.label}</span>
+          </a>
+        ))}
+        <!-- Admin -->
+        <div id="admin-nav-item" class="hidden">
+          <a href="/admin" class={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            activeNav === 'admin'
+              ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+          }`}>
+            <span class="text-base">🛡️</span>
+            <span>관리자 패널</span>
+          </a>
+        </div>
+      </nav>
+      <!-- Bottom -->
+      <div class="px-3 py-4 border-t border-slate-200 dark:border-slate-700 space-y-1">
+        <button
+          id="dark-toggle"
+          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+        >
+          <span id="dark-icon">🌙</span>
+          <span id="dark-label">다크 모드</span>
+        </button>
+        <button
+          id="logout-btn"
+          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        >
+          <span>🚪</span>
+          <span>로그아웃</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Mobile overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 z-30 bg-black/50 lg:hidden hidden" onclick="closeSidebar()"></div>
+
+    <!-- Main content -->
+    <div class="flex-1 flex flex-col lg:pl-64 min-w-0">
+      <!-- Top bar (mobile) -->
+      <header class="lg:hidden flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20">
+        <button onclick="openSidebar()" class="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <span class="font-bold text-slate-900 dark:text-white">클라우드프레스</span>
+      </header>
+
+      <!-- Announcement banner -->
+      <div id="announcement-banner" class="hidden bg-blue-600 text-white text-sm text-center py-2 px-4">
+        <span id="announcement-text"></span>
+      </div>
+
+      <!-- Page content -->
+      <main class="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 max-w-[1400px] w-full mx-auto">
+        <slot />
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Init user info
+    async function initDashboard() {
+      try {
+        const res = await fetch('/api/profile');
+        if (!res.ok) { window.location.href = '/login'; return; }
+        const { data: user } = await res.json();
+        if (!user) { window.location.href = '/login'; return; }
+        // Show admin nav
+        if (user.role === 'admin') {
+          document.getElementById('admin-nav-item')?.classList.remove('hidden');
+        }
+        // Store for pages
+        (window as any)._cpUser = user;
+        document.dispatchEvent(new CustomEvent('cp:user-loaded', { detail: user }));
+      } catch { window.location.href = '/login'; }
+    }
+
+    // Dark mode toggle
+    function updateDarkUI() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const icon = document.getElementById('dark-icon');
+      const label = document.getElementById('dark-label');
+      if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+      if (label) label.textContent = isDark ? '라이트 모드' : '다크 모드';
+    }
+    document.getElementById('dark-toggle')?.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('cp_dark', isDark ? '1' : '0');
+      updateDarkUI();
+    });
+    updateDarkUI();
+
+    // Logout
+    document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    });
+
+    // Sidebar mobile
+    (window as any).openSidebar = () => {
+      document.getElementById('sidebar')?.classList.remove('-translate-x-full');
+      document.getElementById('sidebar-overlay')?.classList.remove('hidden');
+    };
+    (window as any).closeSidebar = () => {
+      document.getElementById('sidebar')?.classList.add('-translate-x-full');
+      document.getElementById('sidebar-overlay')?.classList.add('hidden');
+    };
+
+    // Announcement banner
+    async function loadAnnouncement() {
+      try {
+        const res = await fetch('/api/admin?resource=settings');
+        if (!res.ok) return;
+        const { data } = await res.json();
+        if (data?.ANNOUNCEMENT_ACTIVE === 'true' && data?.ANNOUNCEMENT_BANNER) {
+          const banner = document.getElementById('announcement-banner');
+          const text = document.getElementById('announcement-text');
+          if (banner && text) {
+            text.textContent = data.ANNOUNCEMENT_BANNER;
+            banner.classList.remove('hidden');
+          }
+        }
+      } catch {}
+    }
+
+    initDashboard();
+    loadAnnouncement();
+  </script>
+</Base>
+
+<style>
+  .bg-primary { background-color: #0070f3; }
+</style>
