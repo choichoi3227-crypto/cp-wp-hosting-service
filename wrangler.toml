@@ -19,7 +19,7 @@ class_name = "MyDurableObject"
 
 [[migrations]]
 tag = "v1"
-new_kv_classes = ["MyDurableObject"]
+new_classes = ["MyDurableObject"]
 
 [vars]
 ENVIRONMENT = "production"
