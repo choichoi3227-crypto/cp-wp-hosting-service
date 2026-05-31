@@ -1,1 +1,0 @@
-# cp-wp-hosting-service
