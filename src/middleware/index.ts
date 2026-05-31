@@ -19,7 +19,16 @@ export const onRequest: MiddlewareHandler = async ({ request, locals, url, redir
   const runtime = (locals as { runtime?: { env: Env } }).runtime;
   const env = runtime?.env;
 
-  if (!env) return next();
+  if (!env) {
+    // Cloudflare bindings not available — return 503 for API routes, pass through for static assets
+    if (url.pathname.startsWith('/api/')) {
+      return new Response(
+        JSON.stringify({ success: false, error: '서버 환경 설정이 올바르지 않습니다. 관리자에게 문의하세요.' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    return next();
+  }
 
   // Attach env to locals
   (locals as Record<string, unknown>).env = env;
