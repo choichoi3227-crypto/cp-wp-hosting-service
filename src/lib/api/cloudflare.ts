@@ -38,8 +38,11 @@ export class CloudflareClient {
   // Verify credentials
   async verifyCredentials(): Promise<{ valid: boolean; accountId?: string; email?: string }> {
     try {
-      const result = await this.request<{ id: string; email: string }>('GET', '/user');
-      return { valid: true, accountId: result.id, email: result.email };
+      const user = await this.request<{ id: string; email: string }>('GET', '/user');
+      // /user returns the user's own ID, not the account ID
+      const accounts = await this.request<Array<{ id: string }>>('GET', '/accounts?per_page=1');
+      const accountId = (accounts as Array<{ id: string }>)[0]?.id;
+      return { valid: true, accountId, email: user.email };
     } catch {
       return { valid: false };
     }
