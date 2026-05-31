@@ -10,6 +10,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const POST: APIRoute = async ({ request, locals }) => {
   const env = (locals as { env: Env }).env;
 
+  if (!env || !env.DB) {
+    return Response.json(
+      { success: false, error: '서버 데이터베이스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await request.json() as { email?: string; password?: string; name?: string };
     const { email, password, name } = body;
