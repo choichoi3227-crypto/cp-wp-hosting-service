@@ -3,9 +3,9 @@
     "type": "module",
     "version": "0.1.0",
     "scripts": {
-      "dev": "npm run dev",
-      "build": "npm build",
-      "preview": "npm run preview",
+      "dev": "astro dev",
+      "build": "astro build",
+      "preview": "astro run preview",
       "deploy": "wrangler pages deploy dist"
     },
     "dependencies": {
