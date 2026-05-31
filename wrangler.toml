@@ -1,7 +1,8 @@
-name = "cloudpress"
+# wrangler.toml
+name = 'cp-wp-hosting-service'
 compatibility_date = "2026-05-14"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "./dist"
+pages_build_output_dir = "."
 
 [[d1_databases]]
 binding = "DB"
