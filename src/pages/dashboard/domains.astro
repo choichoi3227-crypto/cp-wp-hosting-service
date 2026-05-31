@@ -1,0 +1,291 @@
+---
+// src/pages/dashboard/domains.astro
+import Dashboard from '../../layouts/Dashboard.astro';
+---
+<Dashboard title="도메인 관리" activeNav="domains">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">도메인 관리</h1>
+    <button onclick="openAddDomain()"
+      class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">
+      ＋ 도메인 추가하기
+    </button>
+  </div>
+
+  <!-- Domain list -->
+  <div id="domains-container" class="mb-6">
+    <div class="text-center text-slate-400 py-12">도메인 목록을 불러오는 중...</div>
+  </div>
+
+  <!-- Add Domain Modal -->
+  <div id="add-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 w-full max-w-md shadow-2xl">
+      <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+        <h2 class="font-semibold text-slate-900 dark:text-white">도메인 추가</h2>
+        <button onclick="closeAddDomain()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl leading-none">×</button>
+      </div>
+      <div id="modal-step-1" class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">도메인 주소</label>
+          <input id="new-domain" type="text" placeholder="example.com"
+            class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+          <p class="text-xs text-slate-400 mt-1">www 없이 루트 도메인을 입력하세요 (예: example.com)</p>
+        </div>
+        <div id="add-msg" class="hidden px-4 py-3 rounded-lg text-sm"></div>
+        <div class="flex gap-3">
+          <button onclick="closeAddDomain()" class="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700">
+            취소
+          </button>
+          <button onclick="addDomain()" id="btn-add-domain"
+            class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors">
+            추가하기 →
+          </button>
+        </div>
+      </div>
+
+      <div id="modal-step-2" class="hidden p-6 space-y-4">
+        <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-sm text-green-700 dark:text-green-400">
+          ✅ 도메인이 추가되었습니다! 아래 네임서버로 변경해주세요.
+        </div>
+        <div class="space-y-3">
+          <p class="text-sm font-medium text-slate-700 dark:text-slate-300">네임서버 (2개 모두 설정)</p>
+          <div class="flex items-center gap-2">
+            <code id="ns1" class="flex-1 text-xs bg-slate-100 dark:bg-slate-700 px-3 py-2 rounded-lg font-mono text-slate-700 dark:text-slate-300"></code>
+            <button onclick="copyNS('ns1')" class="px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50">복사</button>
+          </div>
+          <div class="flex items-center gap-2">
+            <code id="ns2" class="flex-1 text-xs bg-slate-100 dark:bg-slate-700 px-3 py-2 rounded-lg font-mono text-slate-700 dark:text-slate-300"></code>
+            <button onclick="copyNS('ns2')" class="px-2.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50">복사</button>
+          </div>
+          <p class="text-xs text-slate-500">가비아, 카페24, GoDaddy 등 도메인 등록업체에서 설정해주세요. 네임서버 변경은 최대 48시간 소요될 수 있습니다.</p>
+        </div>
+        <button onclick="closeAddDomain()" class="w-full py-2.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connect Domain Modal -->
+  <div id="connect-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 w-full max-w-md shadow-2xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-slate-900 dark:text-white">도메인 연결</h2>
+        <button onclick="closeConnectModal()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
+      </div>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">연결할 사이트를 선택하세요.</p>
+      <select id="connect-site-select" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
+        <option value="">사이트 선택...</option>
+      </select>
+      <div id="connect-msg" class="hidden mb-4 px-4 py-3 rounded-lg text-sm"></div>
+      <div class="flex gap-3">
+        <button onclick="closeConnectModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400">취소</button>
+        <button onclick="connectDomain()" id="btn-connect"
+          class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm">
+          연결하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let connectingDomainId = '';
+
+    async function loadDomains() {
+      const container = document.getElementById('domains-container')!;
+      try {
+        const res = await fetch('/api/domains');
+        const { data: domains = [] } = await res.json();
+
+        if (!domains.length) {
+          container.innerHTML = `
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+              <div class="text-4xl mb-3">🔗</div>
+              <h2 class="font-semibold text-slate-900 dark:text-white mb-2">연결된 도메인이 없습니다</h2>
+              <p class="text-slate-500 dark:text-slate-400 text-sm mb-5">커스텀 도메인을 추가하여 사이트에 연결하세요.</p>
+              <button onclick="openAddDomain()" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">
+                ＋ 도메인 추가하기
+              </button>
+            </div>`;
+          return;
+        }
+
+        const nsStatusBadge = (s: string) => ({
+          active: '<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">활성</span>',
+          pending: '<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">전파 중</span>',
+          error: '<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">오류</span>',
+        })[s] || '<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">대기</span>';
+
+        container.innerHTML = `
+          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase">
+                <tr>
+                  <th class="text-left px-6 py-3 font-medium">도메인</th>
+                  <th class="text-left px-6 py-3 font-medium hidden md:table-cell">네임서버</th>
+                  <th class="text-left px-6 py-3 font-medium">NS 상태</th>
+                  <th class="text-left px-6 py-3 font-medium hidden lg:table-cell">SSL</th>
+                  <th class="px-6 py-3"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                ${domains.map((d: any) => `
+                  <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                    <td class="px-6 py-4">
+                      <div class="font-medium text-slate-900 dark:text-white">${d.domain}</div>
+                      ${d.connected_site_id ? '<div class="text-xs text-slate-400">연결됨</div>' : ''}
+                    </td>
+                    <td class="px-6 py-4 hidden md:table-cell text-xs text-slate-500 dark:text-slate-400">
+                      ${d.nameserver_1 ? `${d.nameserver_1}<br>${d.nameserver_2}` : '–'}
+                    </td>
+                    <td class="px-6 py-4">${nsStatusBadge(d.ns_status)}</td>
+                    <td class="px-6 py-4 hidden lg:table-cell">${nsStatusBadge(d.ssl_status)}</td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2 justify-end">
+                        ${d.ns_status === 'pending' ? `<button onclick="checkNS('${d.id}')" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">확인</button>` : ''}
+                        ${d.ns_status === 'active' && !d.connected_site_id ? `<button onclick="openConnectModal('${d.id}')" class="px-3 py-1.5 rounded-lg border border-blue-200 dark:border-blue-800 text-xs font-medium text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20">연결</button>` : ''}
+                        <button onclick="deleteDomain('${d.id}', '${d.domain}')" class="px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">삭제</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      } catch {
+        container.innerHTML = '<div class="text-center text-red-500 py-8">도메인 목록을 불러오는 데 실패했습니다.</div>';
+      }
+    }
+
+    function openAddDomain() {
+      const modal = document.getElementById('add-modal')!;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.getElementById('modal-step-1')?.classList.remove('hidden');
+      document.getElementById('modal-step-2')?.classList.add('hidden');
+      document.getElementById('add-msg')?.classList.add('hidden');
+      (document.getElementById('new-domain') as HTMLInputElement).value = '';
+    }
+    (window as any).openAddDomain = openAddDomain;
+
+    function closeAddDomain() {
+      const modal = document.getElementById('add-modal')!;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      loadDomains();
+    }
+    (window as any).closeAddDomain = closeAddDomain;
+
+    async function addDomain() {
+      const domain = (document.getElementById('new-domain') as HTMLInputElement).value.trim().toLowerCase();
+      if (!domain) return;
+      const btn = document.getElementById('btn-add-domain') as HTMLButtonElement;
+      btn.disabled = true;
+      btn.textContent = '추가 중...';
+      const msgEl = document.getElementById('add-msg')!;
+      try {
+        const res = await fetch('/api/domains', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'add', domain }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('ns1')!.textContent = data.data.nameserver_1 || '';
+          document.getElementById('ns2')!.textContent = data.data.nameserver_2 || '';
+          document.getElementById('modal-step-1')?.classList.add('hidden');
+          document.getElementById('modal-step-2')?.classList.remove('hidden');
+        } else {
+          msgEl.textContent = data.error || '도메인 추가에 실패했습니다.';
+          msgEl.className = 'px-4 py-3 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800';
+          msgEl.classList.remove('hidden');
+        }
+      } catch {
+        msgEl.textContent = '네트워크 오류가 발생했습니다.';
+        msgEl.className = 'px-4 py-3 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400';
+        msgEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '추가하기 →';
+      }
+    }
+    (window as any).addDomain = addDomain;
+
+    async function checkNS(domainId: string) {
+      try {
+        const res = await fetch('/api/domains', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check_ns', domain_id: domainId }),
+        });
+        const data = await res.json();
+        alert(data.message || (data.data?.active ? '도메인이 활성화되었습니다!' : '아직 전파되지 않았습니다.'));
+        loadDomains();
+      } catch { alert('확인 중 오류가 발생했습니다.'); }
+    }
+    (window as any).checkNS = checkNS;
+
+    async function openConnectModal(domainId: string) {
+      connectingDomainId = domainId;
+      const modal = document.getElementById('connect-modal')!;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.getElementById('connect-msg')?.classList.add('hidden');
+      // Load sites
+      const res = await fetch('/api/sites');
+      const { data: sites = [] } = await res.json();
+      const select = document.getElementById('connect-site-select') as HTMLSelectElement;
+      select.innerHTML = '<option value="">사이트 선택...</option>' +
+        sites.filter((s: any) => s.status === 'active').map((s: any) =>
+          `<option value="${s.id}">${s.name} (${s.subdomain}.cloudpress.io)</option>`
+        ).join('');
+    }
+    (window as any).openConnectModal = openConnectModal;
+
+    function closeConnectModal() {
+      const modal = document.getElementById('connect-modal')!;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    (window as any).closeConnectModal = closeConnectModal;
+
+    async function connectDomain() {
+      const siteId = (document.getElementById('connect-site-select') as HTMLSelectElement).value;
+      if (!siteId) { alert('사이트를 선택해주세요.'); return; }
+      const msgEl = document.getElementById('connect-msg')!;
+      try {
+        const res = await fetch('/api/domains', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'connect', domain_id: connectingDomainId, site_id: siteId }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeConnectModal();
+          alert(data.message || '도메인이 연결되었습니다.');
+          loadDomains();
+        } else {
+          msgEl.textContent = data.error || '연결에 실패했습니다.';
+          msgEl.className = 'px-4 py-3 rounded-lg text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400';
+          msgEl.classList.remove('hidden');
+        }
+      } catch { alert('네트워크 오류가 발생했습니다.'); }
+    }
+    (window as any).connectDomain = connectDomain;
+
+    async function deleteDomain(id: string, domain: string) {
+      if (!confirm(`"${domain}" 도메인을 삭제하시겠습니까?`)) return;
+      const res = await fetch(`/api/domains?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) { loadDomains(); }
+      else alert(data.error || '삭제에 실패했습니다.');
+    }
+    (window as any).deleteDomain = deleteDomain;
+
+    function copyNS(id: string) {
+      navigator.clipboard.writeText(document.getElementById(id)?.textContent || '');
+    }
+    (window as any).copyNS = copyNS;
+
+    loadDomains();
+  </script>
+</Dashboard>
