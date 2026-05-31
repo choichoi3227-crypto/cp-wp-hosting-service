@@ -19,7 +19,7 @@ class_name = "MyDurableObject"
 
 [[migrations]]
 tag = "v1"
-new_classes = ["sitemanager_MyDurableObject", "webhook-handler_MyDurableObject", "cachemanager_MyDurableObject"]
+new_kv_classes = ["MyDurableObject"]
 
 [vars]
 ENVIRONMENT = "production"
