@@ -64,7 +64,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
       },
     }), { status: 200, headers });
   } catch (err) {
-    console.error('Login error:', err);
-    return Response.json({ success: false, error: '로그인 중 오류가 발생했습니다.' }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error('Login error:', message, stack);
+    return Response.json({
+      success: false,
+      error: '로그인 중 오류가 발생했습니다.',
+      debug: message, // 문제 파악 후 반드시 제거할 것
+    }, { status: 500 });
   }
 };
