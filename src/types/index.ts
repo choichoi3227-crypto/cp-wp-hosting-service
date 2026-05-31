@@ -11,6 +11,7 @@ export interface Env {
   export interface User {
     id: string;
     email: string;
+    password_hash?: string;
     name: string;
     avatar_url?: string;
     role: 'user' | 'admin';
