@@ -1,0 +1,197 @@
+---
+// src/pages/dashboard/profile.astro
+import Dashboard from '../../layouts/Dashboard.astro';
+---
+<Dashboard title="내 정보 관리" activeNav="profile">
+  <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">내 정보 관리</h1>
+
+  <div class="max-w-2xl space-y-6">
+
+    <!-- Basic Info -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+      <h2 class="font-semibold text-slate-900 dark:text-white mb-4">기본 정보</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">이름</label>
+          <input id="profile-name" type="text" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">이메일</label>
+          <input id="profile-email" type="email" disabled class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-sm cursor-not-allowed">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">현재 플랜</label>
+          <p id="profile-plan" class="text-sm font-semibold text-blue-600 dark:text-blue-400"></p>
+        </div>
+      </div>
+      <div id="profile-msg" class="hidden mt-4 px-4 py-3 rounded-lg text-sm"></div>
+      <button onclick="saveProfile()" class="mt-4 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">
+        저장하기
+      </button>
+    </div>
+
+    <!-- Cloudflare Integration -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+      <div class="flex items-center gap-2 mb-1">
+        <h2 class="font-semibold text-slate-900 dark:text-white">Cloudflare 연동</h2>
+        <span id="cf-badge" class="hidden inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">✅ 인증됨</span>
+      </div>
+      <p class="text-xs text-slate-400 mb-4">사이트 배포를 위해 Cloudflare 글로벌 API 키가 필요합니다.</p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Cloudflare 글로벌 API 키</label>
+          <input id="cf-api-key" type="password" placeholder="마스킹된 값 또는 새 키 입력"
+            class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+          <p class="text-xs text-slate-400 mt-1">Cloudflare → My Profile → API Tokens → Global API Key에서 확인</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Cloudflare 계정 이메일</label>
+          <input id="cf-email" type="email" placeholder="your@cloudflare.com"
+            class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        </div>
+      </div>
+      <div id="cf-msg" class="hidden mt-3 px-4 py-3 rounded-lg text-sm"></div>
+      <button onclick="validateCF()" id="btn-cf"
+        class="mt-4 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors">
+        검증하기
+      </button>
+    </div>
+
+    <!-- GitHub Integration -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+      <div class="flex items-center gap-2 mb-1">
+        <h2 class="font-semibold text-slate-900 dark:text-white">GitHub 연동</h2>
+        <span id="gh-badge" class="hidden inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">✅ 인증됨</span>
+      </div>
+      <p class="text-xs text-slate-400 mb-4">미디어 파일 및 코드 저장을 위해 GitHub 토큰이 필요합니다.</p>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">GitHub Personal Access Token</label>
+        <input id="gh-token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        <p class="text-xs text-slate-400 mt-1">
+          GitHub → Settings → Developer settings → Personal access tokens → <strong>repo, workflow</strong> 권한 필요
+        </p>
+      </div>
+      <div id="gh-msg" class="hidden mt-3 px-4 py-3 rounded-lg text-sm"></div>
+      <button onclick="validateGH()" id="btn-gh"
+        class="mt-4 px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 text-white text-sm font-semibold transition-colors">
+        검증하기
+      </button>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-red-200 dark:border-red-900 p-6">
+      <h2 class="font-semibold text-red-600 dark:text-red-400 mb-3">위험 구역</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">계정을 삭제하면 모든 사이트와 도메인 데이터가 영구적으로 삭제됩니다.</p>
+      <button onclick="deleteAccount()" class="px-4 py-2 rounded-xl border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+        계정 삭제
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const planNames: Record<string, string> = {
+      free: '무료', starter: '스타터 ($9/월)', pro: '프로 ($29/월)', business: '비즈니스 ($79/월)'
+    };
+
+    async function loadProfile() {
+      try {
+        const res = await fetch('/api/profile');
+        const { data: user } = await res.json();
+        (document.getElementById('profile-name') as HTMLInputElement).value = user.name || '';
+        (document.getElementById('profile-email') as HTMLInputElement).value = user.email || '';
+        document.getElementById('profile-plan')!.textContent = planNames[user.plan_id] || user.plan_id;
+        if (user.has_cf) {
+          document.getElementById('cf-badge')?.classList.remove('hidden');
+          if (user.cf_email) (document.getElementById('cf-email') as HTMLInputElement).value = user.cf_email;
+        }
+        if (user.has_gh) document.getElementById('gh-badge')?.classList.remove('hidden');
+      } catch {}
+    }
+
+    function showMsg(id: string, text: string, type: 'success' | 'error') {
+      const el = document.getElementById(id)!;
+      el.textContent = text;
+      el.className = `mt-3 px-4 py-3 rounded-lg text-sm ${
+        type === 'success'
+          ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
+          : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
+      }`;
+      el.classList.remove('hidden');
+    }
+
+    async function saveProfile() {
+      const name = (document.getElementById('profile-name') as HTMLInputElement).value.trim();
+      if (!name || name.length < 2) { showMsg('profile-msg', '이름은 2자 이상이어야 합니다.', 'error'); return; }
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_profile', name }),
+      });
+      const data = await res.json();
+      showMsg('profile-msg', data.message || (data.success ? '저장되었습니다.' : data.error || '오류'), data.success ? 'success' : 'error');
+    }
+    (window as any).saveProfile = saveProfile;
+
+    async function validateCF() {
+      const apiKey = (document.getElementById('cf-api-key') as HTMLInputElement).value.trim();
+      const email = (document.getElementById('cf-email') as HTMLInputElement).value.trim();
+      if (!apiKey || !email) { showMsg('cf-msg', 'API 키와 이메일을 모두 입력해주세요.', 'error'); return; }
+      const btn = document.getElementById('btn-cf') as HTMLButtonElement;
+      btn.disabled = true; btn.textContent = '검증 중...';
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'validate_cf', cf_api_key: apiKey, cf_email: email }),
+        });
+        const data = await res.json();
+        showMsg('cf-msg', data.message || data.error || '', data.success ? 'success' : 'error');
+        if (data.success) document.getElementById('cf-badge')?.classList.remove('hidden');
+      } catch { showMsg('cf-msg', '네트워크 오류가 발생했습니다.', 'error'); }
+      finally { btn.disabled = false; btn.textContent = '검증하기'; }
+    }
+    (window as any).validateCF = validateCF;
+
+    async function validateGH() {
+      const token = (document.getElementById('gh-token') as HTMLInputElement).value.trim();
+      if (!token) { showMsg('gh-msg', 'GitHub 토큰을 입력해주세요.', 'error'); return; }
+      const btn = document.getElementById('btn-gh') as HTMLButtonElement;
+      btn.disabled = true; btn.textContent = '검증 중...';
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'validate_gh', gh_token: token }),
+        });
+        const data = await res.json();
+        showMsg('gh-msg', data.message || data.error || '', data.success ? 'success' : 'error');
+        if (data.success) document.getElementById('gh-badge')?.classList.remove('hidden');
+      } catch { showMsg('gh-msg', '네트워크 오류가 발생했습니다.', 'error'); }
+      finally { btn.disabled = false; btn.textContent = '검증하기'; }
+    }
+    (window as any).validateGH = validateGH;
+
+    async function deleteAccount() {
+      const email = (document.getElementById('profile-email') as HTMLInputElement).value;
+      const confirm1 = confirm('⚠️ 계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다.\n\n계속하시겠습니까?');
+      if (!confirm1) return;
+      const input = prompt(`삭제를 확인하려면 이메일 주소를 입력하세요:\n${email}`);
+      if (input !== email) { alert('이메일이 일치하지 않습니다.'); return; }
+      try {
+        const res = await fetch('/api/profile', { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          await fetch('/api/auth/logout', { method: 'POST' });
+          window.location.href = '/login';
+        } else alert(data.error || '삭제에 실패했습니다.');
+      } catch { alert('네트워크 오류가 발생했습니다.'); }
+    }
+    (window as any).deleteAccount = deleteAccount;
+
+    loadProfile();
+  </script>
+</Dashboard>
