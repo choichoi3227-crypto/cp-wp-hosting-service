@@ -1,0 +1,43 @@
+---
+// src/layouts/Base.astro
+export interface Props {
+  title?: string;
+  description?: string;
+  noIndex?: boolean;
+}
+const { title = '클라우드프레스', description = '헤드리스 WordPress 호스팅 서비스', noIndex } = Astro.props;
+const fullTitle = title === '클라우드프레스' ? title : `${title} — 클라우드프레스`;
+---
+<!doctype html>
+<html lang="ko" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  {noIndex && <meta name="robots" content="noindex,nofollow" />}
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script is:inline>
+    // Dark mode init (prevent flash)
+    const dm = localStorage.getItem('cp_dark');
+    if (dm === '1' || (!dm && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="h-full bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans antialiased">
+  <slot />
+</body>
+</html>
+
+<style is:global>
+  *, ::before, ::after { box-sizing: border-box; }
+  html { font-family: 'Noto Sans KR', sans-serif; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+  .dark ::-webkit-scrollbar-thumb { background: #475569; }
+</style>
