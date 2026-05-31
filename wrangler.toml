@@ -14,16 +14,16 @@ binding = "KV"
 id = "13f767b4020e438db9a7ee5ea320801c"
 
 [[durable_objects.bindings]]
-name = "sitemanager_MyDurableObject"
-class_name = "sitemanager_MyDurableObject"
+name = "MyDurableObject"
+class_name = "MyDurableObject"
 
 [[durable_objects.bindings]]
-name = "webhook-handler_MyDurableObject"
-class_name = "webhook-handler_MyDurableObject"
+name = "MyDurableObject"
+class_name = "MyDurableObject"
 
 [[durable_objects.bindings]]
-name = "cachemanager_MyDurableObject"
-class_name = "cachemanager_MyDurableObject"
+name = "MyDurableObject"
+class_name = "MyDurableObject"
 
 [[migrations]]
 tag = "v1"
