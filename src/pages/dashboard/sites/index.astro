@@ -1,0 +1,131 @@
+---
+// src/pages/dashboard/sites/index.astro
+import Dashboard from '../../../layouts/Dashboard.astro';
+---
+<Dashboard title="내 사이트" activeNav="sites">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">내 사이트</h1>
+    <a href="/dashboard/create" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">
+      ＋ 새 사이트 만들기
+    </a>
+  </div>
+
+  <div id="sites-container">
+    <div class="text-center text-slate-400 py-12">사이트 목록을 불러오는 중...</div>
+  </div>
+
+  <script>
+    import { escapeHtml } from '../../../lib/utils/escape.ts';
+
+    function bindSiteActions() {
+      const container = document.getElementById('sites-container');
+      if (!container || (container as any)._siteActionsBound) return;
+      (container as any)._siteActionsBound = true;
+      container.addEventListener('click', (e) => {
+        const btn = (e.target as HTMLElement).closest('[data-action="delete-site"]') as HTMLElement | null;
+        if (!btn) return;
+        deleteSite(btn.dataset.id || '', btn.dataset.name || '');
+      });
+    }
+
+    function statusBadge(status: string) {
+      const map: Record<string, [string, string]> = {
+        active: ['bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', '운영중'],
+        building: ['bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', '빌드중'],
+        error: ['bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', '오류'],
+        pending: ['bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400', '대기'],
+        suspended: ['bg-slate-100 text-slate-500', '정지'],
+      };
+      const [cls, label] = map[status] || map.pending;
+      return `<span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${cls}${status === 'building' ? ' animate-pulse' : ''}">${label}</span>`;
+    }
+
+    function timeAgo(d: string) {
+      if (!d) return '–';
+      const diff = Date.now() - new Date(d).getTime();
+      const m = Math.floor(diff / 60000);
+      if (m < 1) return '방금 전';
+      if (m < 60) return `${m}분 전`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h}시간 전`;
+      return `${Math.floor(h / 24)}일 전`;
+    }
+
+    async function loadSites() {
+      const container = document.getElementById('sites-container')!;
+      try {
+        const res = await fetch('/api/sites');
+        if (!res.ok) throw new Error();
+        const { data: sites = [] } = await res.json();
+
+        if (!sites.length) {
+          container.innerHTML = `
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-12 text-center">
+              <div class="text-5xl mb-4">🌐</div>
+              <h2 class="font-semibold text-slate-900 dark:text-white mb-2">아직 사이트가 없습니다</h2>
+              <p class="text-slate-500 dark:text-slate-400 text-sm mb-5">첫 번째 헤드리스 WordPress 사이트를 만들어보세요!</p>
+              <a href="/dashboard/create" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors">
+                ＋ 사이트 만들기
+              </a>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">
+                <tr>
+                  <th class="text-left px-6 py-3 font-medium">사이트</th>
+                  <th class="text-left px-6 py-3 font-medium hidden md:table-cell">URL</th>
+                  <th class="text-left px-6 py-3 font-medium hidden lg:table-cell">마지막 배포</th>
+                  <th class="text-left px-6 py-3 font-medium">상태</th>
+                  <th class="px-6 py-3"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                ${sites.map((s: any) => `
+                  <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                    <td class="px-6 py-4">
+                      <div class="font-medium text-slate-900 dark:text-white">${escapeHtml(s.name)}</div>
+                      <div class="text-xs text-slate-400 md:hidden mt-0.5">${s.custom_domain || s.subdomain + '.cloudpress.io'}</div>
+                    </td>
+                    <td class="px-6 py-4 hidden md:table-cell">
+                      <a href="${s.cf_worker_url || '#'}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline truncate max-w-xs block">
+                        ${s.custom_domain || s.subdomain + '.cloudpress.io'}
+                      </a>
+                    </td>
+                    <td class="px-6 py-4 text-slate-500 dark:text-slate-400 hidden lg:table-cell">${timeAgo(s.last_deployed_at)}</td>
+                    <td class="px-6 py-4">${statusBadge(s.status)}</td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2 justify-end">
+                        <a href="/dashboard/sites/${s.id}" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">관리</a>
+                        <button type="button" data-action="delete-site" data-id="${s.id}" data-name="${escapeHtml(s.name)}" class="px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">삭제</button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`;
+        bindSiteActions();
+      } catch {
+        container.innerHTML = '<div class="text-center text-red-500 py-8">사이트 목록을 불러오는 데 실패했습니다.</div>';
+      }
+    }
+
+    async function deleteSite(id: string, name: string) {
+      if (!confirm(`"${name}" 사이트를 삭제하시겠습니까?\n\n⚠️ Cloudflare Worker와 GitHub 저장소도 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.`)) return;
+      try {
+        const res = await fetch(`/api/sites/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) { alert('사이트가 삭제되었습니다.'); loadSites(); }
+        else alert(data.error || '삭제에 실패했습니다.');
+      } catch { alert('네트워크 오류가 발생했습니다.'); }
+    }
+    (window as any).deleteSite = deleteSite;
+
+    bindSiteActions();
+    loadSites();
+  </script>
+</Dashboard>
