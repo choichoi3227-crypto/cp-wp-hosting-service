@@ -3,9 +3,6 @@
 export interface Env {
     DB: D1Database;
     KV: KVNamespace;
-    SITE_MANAGER: DurableObjectNamespace;
-    WEBHOOK_HANDLER: DurableObjectNamespace;
-    CACHE_MANAGER: DurableObjectNamespace;
     JWT_SECRET: string;
     ENCRYPTION_KEY: string;
     ENVIRONMENT: string;
